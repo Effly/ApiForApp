@@ -2,12 +2,10 @@
 
 namespace App\Models;
 
-use App\Jobs\deleteCode;
-use Carbon\Carbon;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
+
 
 class Codes extends Model
 {
@@ -16,22 +14,11 @@ class Codes extends Model
 //    protected $fillable = ['code'];
 
     public function getCode(){
-        $code = new Codes();
-        $code->code = rand(10000,99999);
-        $code->save();
-        $id = $code->id;
-        Log::error('tratra');
-        $job = new deleteCode($id);
 
-        Log::error('tratra2');
-//        $job = deleteCode::create($code->id);
-        deleteCode::dispatch($job)->delay(Carbon::now()->addMinutes(1));
-        Log::error('tratra3');
+        $code = rand(10000,99999);
         return $code;
     }
-    public function deleteCode($id){
-        $this->find($id)->delete();
-    }
+
     public function deleteUsedCode(){
 
     }
