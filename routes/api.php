@@ -20,5 +20,6 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
+Route::post('/password/reset', [AuthController::class,'changePassword']);
 Route::post('/get-code', [AuthController::class,'getCode'])->name('get-code');
 Route::get('/pre-get-code', function (){return view('testpass');})->name('pre-get-code');
