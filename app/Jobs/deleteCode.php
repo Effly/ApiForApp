@@ -15,16 +15,16 @@ class deleteCode implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    private $id;
+    private $email;
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($id)
+    public function __construct($email)
     {
-        $this->id = $id;
+        $this->email = $email;
     }
 
     /**
@@ -35,6 +35,6 @@ class deleteCode implements ShouldQueue
     public function handle(Codes $codes)
     {
 //        Log::error([$this->id]);
-        $codes->deleteCode([$this->id]);
+        $codes->deleteCode($this->email->email);
     }
 }
