@@ -22,4 +22,10 @@ Route::post('/register', [AuthController::class,'register']);
 Route::post('/login', [AuthController::class,'login']);
 Route::post('/password/reset', [AuthController::class,'changePassword']);
 Route::post('/get-code', [AuthController::class,'getCode'])->name('get-code');
-Route::get('/pre-get-code', function (){return view('testpass');})->name('pre-get-code');
+Route::post('/get-code-change', [AuthController::class,'getCodeForChangePass']);
+//Route::get('/pre-get-code', function (){return view('testpass');})->name('pre-get-code');
+
+
+
+
+//Route::get('/delete-code', [AuthController::class,'deleteTest']);
