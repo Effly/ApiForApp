@@ -6,30 +6,56 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Http;
 use App\Models\Codes;
-use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
+
 
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request, Codes $codes)
     {
-        $validatedData = $request->validate([
+        $rules = array(
             'name' => 'string',
-            'email' => 'email|required|unique:users',
-            'password' => 'required',
-            'tel' => 'string'
-        ]);
+            'email' => 'email|required',
+            'password' => 'required|min:8',
+            'code' => 'required|min:5'
+        );
 
-        $validatedData['password'] = bcrypt($request->password);
+        $messages = array(
+            'required' => 'Обязательно должен быть заполнен :attribute',
+            'email' => 'The :attribute field is email',
+            'same:new_password' => 'The :attribute field must only be letters and numbers (no spaces)',
+            'min:8' => 'The :attribute field must only be letters and numbers (8)',
+            'min:5' => 'The :attribute field must only be letters and numbers (5)'
+        );
+        $validator = Validator::make($request->all(), $rules, $messages);
 
-        $user = User::create($validatedData);
 
-        $accessToken = $user->createToken('authToken')->accessToken;
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+//        dd($validatedData);
+        $request->password = Hash::make($request->password);
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => $request->password,
+            'tel' => $request->tel,
+            'last_code' => $request->code,
+        ];
+        $code = Codes::where('email', $data['email'])->first()->code;
+        if ($data['last_code'] == $code) {
+            $user = User::create($data);
+//            dd($user);
+            $accessToken = $user->createToken('authToken')->accessToken;
 
-        return response(['user' => $user, 'access_token' => $accessToken]);
+            $codes->deleteCode($data['email']);
+
+            return response(['user' => $user, 'access_token' => $accessToken]);
+        } else {
+            return 'Invalid code';
+        }
     }
 
     public function login(Request $request)
@@ -51,9 +77,42 @@ class AuthController extends Controller
 
     }
 
-    public function getCode(Codes $codes)
+    public function getCode(Request $request, Codes $codes)
     {
-        return response(['code' => $codes->getCode()]);
+        $rules = array(
+            'email' => 'email|required'
+        );
+        $messages = array(
+            'required' => 'Обязательно должен быть заполнен :attribute',
+            'email' => 'The :attribute field is email'
+        );
+        $validator = Validator::make($request->all(), $rules, $messages);
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        return response(['code' => $codes->getCode($request->email)]);
+    }
+
+    public function getCodeForChangePass(User $user, Request $request, Codes $codes)
+    {
+        $rules = array(
+            'email' => 'email|required'
+        );
+        $messages = array(
+            'required' => 'Обязательно должен быть заполнен :attribute',
+            'email' => 'The :attribute field is email'
+        );
+        $validator = Validator::make($request->all(), $rules, $messages);
+        if ($validator->fails()) {
+            return response()->json($validator->errors());
+        }
+
+        $user = $user->where('email', $request->email)->first();
+        $user->last_code = $codes->getCode($request->email)->code;
+        $user->save();
+        return response()->json(['status' => 'Success']);
+
     }
 
     public function changePassword(Request $request)
@@ -90,14 +149,18 @@ class AuthController extends Controller
                 $response['status'] = 'OK';
                 $response['desc'] = 'Password reset successfully';
             } else {
-                $response['status']='ERROR';
+                $response['status'] = 'ERROR';
                 $response['desc'] = 'It\'s old password';
             }
-        } else{
-            $response['status']='ERROR';
+        } else {
+            $response['status'] = 'ERROR';
             $response['desc'] = 'INVALID_CODE';
         }
 
         return response()->json($response);
     }
+//    public function deleteTest(Codes $codes,Request $request){
+//
+//        $codes->deleteCode($request->email);
+//    }
 }
