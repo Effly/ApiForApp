@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\PolicyController;
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +24,8 @@ Route::post('/login', [AuthController::class,'login']);
 Route::post('/password/reset', [AuthController::class,'changePassword']);
 Route::post('/get-code', [AuthController::class,'getCode'])->name('get-code');
 Route::post('/get-code-change', [AuthController::class,'getCodeForChangePass']);
+Route::post('/get-policy-list', [PolicyController::class,'getList'])->middleware('auth:api');
+
 //Route::get('/pre-get-code', function (){return view('testpass');})->name('pre-get-code');
 
 
