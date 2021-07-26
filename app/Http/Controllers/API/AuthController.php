@@ -10,7 +10,6 @@ use App\Models\Codes;
 use Illuminate\Support\Facades\Validator;
 
 
-
 class AuthController extends Controller
 {
     public function register(Request $request, Codes $codes)
@@ -25,15 +24,15 @@ class AuthController extends Controller
         $messages = array(
             'required' => 'Обязательно должен быть заполнен :attribute',
             'email' => 'The :attribute field is email',
-            'same:new_password' => 'The :attribute field must only be letters and numbers (no spaces)',
-            'min:8' => 'The :attribute field must only be letters and numbers (8)',
-            'min:5' => 'The :attribute field must only be letters and numbers (5)'
+            'same:new_password' => 'Введены не одинаковы пароли',
+            'min:8' => 'Поле :attribute должно иметь не менее 8 символов',
+            'min:5' => 'Поле :attribute должно иметь не менее 5 символов'
         );
         $validator = Validator::make($request->all(), $rules, $messages);
 
 
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json(['result' => ['code' => 'INVALID_DATA', 'errorId' => '1', 'errorDescr' => $validator->errors()]]);
         }
 //        dd($validatedData);
         $request->password = Hash::make($request->password);
@@ -43,18 +42,23 @@ class AuthController extends Controller
             'password' => $request->password,
             'tel' => $request->tel,
             'last_code' => $request->code,
+            'device_id' => $request->device_id
         ];
-        $code = Codes::where('email', $data['email'])->first()->code;
-        if ($data['last_code'] == $code) {
-            $user = User::create($data);
+        $code = Codes::where('email', $data['email'])->first();
+        if ($code != null) {
+            if ($data['last_code'] == $code->code) {
+                $user = User::create($data);
 //            dd($user);
-            $accessToken = $user->createToken('authToken')->accessToken;
+                $accessToken = $user->createToken('Auth token')->accessToken;
 
-            $codes->deleteCode($data['email']);
+                $codes->deleteCode($data['email']);
 
-            return response(['user' => $user, 'access_token' => $accessToken]);
-        } else {
-            return 'Invalid code';
+                return response()->json(['user' => $user, 'access_token' => $accessToken]);
+            } else {
+                return response()->json(['result' => ['code' => 'INVALID_CODE', 'errorId' => '1', 'errorDescr' => 'Несовпадение проверочного кода']]);
+            }
+        }else {
+            return response()->json(['result' => ['code' => 'INVALID_CODE', 'errorId' => '1', 'errorDescr' => 'Несовпадение проверочного кода']]);
         }
     }
 
@@ -63,16 +67,23 @@ class AuthController extends Controller
 //        dd($request->header('Authorization'));
         $loginData = $request->validate([
             'email' => 'email|required',
-            'password' => 'required'
+            'password' => 'required',
+            'device_id' => 'required'
         ]);
-
-        if (!auth()->attempt($loginData)) {
-            return response(['message' => 'Invalid Credentials']);
+        $device_id = User::where('email', $loginData['email'])->first()->device_id;
+//        dd($device_id);
+        if ($loginData['device_id'] != $device_id) {
+            return response(['result' => ['code' => 'INCORRECT_DEVICE_ID', 'errorId' => '2', 'errorDescr' => 'Неверный универсальный идентификатор']]);
         }
+        if (!auth()->attempt($loginData)) {
+            return response(['result' => ['code' => 'INVALID_CREDENTIALS', 'errorId' => '1', 'errorDescr' => 'Неверный логин или пароль']]);
+        }
+//        if ($loginData['device_id'] != )
+        $accessToken = auth()->user()->createToken('Auth token')->accessToken;
 
-        $accessToken = auth()->user()->createToken('authToken')->accessToken;
 
-        return response(['user' => auth()->user(), 'access_token' => $accessToken]);
+        return response(['result' => ['code' => 'OK'],
+            'access_token' => $accessToken]);
 //        return response(['user' => auth()->user()]);
 
     }
@@ -84,11 +95,11 @@ class AuthController extends Controller
         );
         $messages = array(
             'required' => 'Обязательно должен быть заполнен :attribute',
-            'email' => 'The :attribute field is email'
+            'email' => 'Поле :attribute должно быть в формате email'
         );
         $validator = Validator::make($request->all(), $rules, $messages);
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json(['result' => ['code' => 'INVALID_DATA', 'errorId' => '1', 'errorDescr' => $validator->errors()]]);
         }
 
         return response(['code' => $codes->getCode($request->email)]);
@@ -101,11 +112,11 @@ class AuthController extends Controller
         );
         $messages = array(
             'required' => 'Обязательно должен быть заполнен :attribute',
-            'email' => 'The :attribute field is email'
+            'email' => 'Поле :attribute должно быть в формате email'
         );
         $validator = Validator::make($request->all(), $rules, $messages);
         if ($validator->fails()) {
-            return response()->json($validator->errors());
+            return response()->json(['result' => ['code' => 'INVALID_DATA', 'errorId' => '1', 'errorDescr' => $validator->errors()]]);
         }
 
         $user = $user->where('email', $request->email)->first();
@@ -127,7 +138,7 @@ class AuthController extends Controller
 
         $messages = array(
             'required' => 'Обязательно должен быть заполнен :attribute',
-            'email' => 'The :attribute field is email',
+            'email' => 'Поле :attribute должно быть в формате email',
             'same:new_password' => 'The :attribute field must only be letters and numbers (no spaces)',
             'min:8' => 'The :attribute field must only be letters and numbers (8)',
             'min:5' => 'The :attribute field must only be letters and numbers (5)'
