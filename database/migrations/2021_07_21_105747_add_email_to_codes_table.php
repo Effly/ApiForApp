@@ -27,7 +27,7 @@ class AddEmailToCodesTable extends Migration
     public function down()
     {
         Schema::table('codes', function (Blueprint $table) {
-            //
+            $table->dropColumn('email');
         });
     }
 }
