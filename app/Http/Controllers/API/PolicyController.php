@@ -16,10 +16,18 @@ class PolicyController extends Controller
 //        ]));
         $arr_polices = [];
 //        $policies->fetchPolicies($request->user_id);
-        foreach ($policies->fetchPolicies($request->user_id) as $policy) {
-            $arr_polices[] = unserialize($policy->policy_data);
+        foreach ($policies->fetchPolicies($request->email) as $policy) {
+            $arr_polices[unserialize($policy->policy_data)['number']] = [
+                'last_name' => unserialize($policy->policy_data)['lastName_lat'],
+                'name' => unserialize($policy->policy_data)['name_lat'],
+                'date_start' => unserialize($policy->policy_data)['number'],
+                'date_end' => unserialize($policy->policy_data)['number'],
+            ];
+
+//            $arr_polices['policy_number'] = unserialize($policy->policy_data)['policy_number'];
+//            $arr_polices['policy_number'] = unserialize($policy->policy_data)['policy_number'];
         }
-        return response()->json($arr_polices);
+        return response()->json(['code' => 'OK', 'data_polices' => $arr_polices]);
     }
 
     public function obtain(Request $request, Policies $policies)
@@ -64,6 +72,7 @@ class PolicyController extends Controller
             'issue_by' => $request->issue_by,
             'duration' => $request->duration,
             'email' => $request->email,
+            'code_kladr' => $request->code_kladr,
         ];
         $user_email = $request->email;
         $save_policy = $policies->savePolicy($data, $user_email);
@@ -72,8 +81,8 @@ class PolicyController extends Controller
             'obtain_result' => ['code' => 'OK',],
             'policy_number' => $save_policy['policy_number'],
             'policy_series' => $save_policy['policy_series'],
-            'ins_sum' => $save_policy['policy_number'],
-            'ins_premium' => $save_policy['policy_number'],
+            'ins_sum' => $save_policy['ins_sum'],
+            'ins_premium' => $save_policy['ins_premium'],
             'rules_link' => $save_policy['rules_link'],
         ]);
         else return response()->json([
@@ -81,6 +90,12 @@ class PolicyController extends Controller
         ]);
 
 //найти реестр роскомнадзора в формат апи
+    }
+
+    public function getInfoPay(Request $request,Policies $policies)
+    {
+        $policies->updateStatusPay($request->policy_number);
+        return response()->json(['code'=>'OK']);
     }
 
 
