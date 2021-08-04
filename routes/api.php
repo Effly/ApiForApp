@@ -26,6 +26,7 @@ Route::post('/get-code', [AuthController::class,'getCode'])->name('get-code');
 Route::post('/get-code-change', [AuthController::class,'getCodeForChangePass']);
 Route::post('/get-policy-list', [PolicyController::class,'getList'])->middleware('auth:api');
 Route::post('/obtain', [PolicyController::class,'obtain'])->middleware('auth:api');
+Route::post('/get-info-pay', [PolicyController::class,'getInfoPay'])->middleware('auth:api');
 
 //Route::get('/pre-get-code', function (){return view('testpass');})->name('pre-get-code');
 
