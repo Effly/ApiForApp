@@ -95,6 +95,7 @@ class PolicyController extends Controller
     public function getInfoPay(Request $request,Policies $policies)
     {
         $policies->updateStatusPay($request->policy_number);
+
         return response()->json(['code'=>'OK']);
     }
 
