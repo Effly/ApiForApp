@@ -9,19 +9,19 @@ class Policies extends Model
 {
     use HasFactory;
 
-    public function fetchPolicies($user_id)
+    public function fetchPolicies($user_email)
     {
-        return $this->where('user_id', $user_id)->get();
+        return $this->where('user_email', $user_email)->get();
     }
 
-    public function savePolicy($data,$user_email)
+    public function savePolicy($data, $user_email)
     {
         $data['number'] = $this->getCounter();
         $policy = new Policies();
         $policy->policy_data = serialize($data);
         $policy->user_email = $user_email;
         $save = $policy->save();
-        if ($save)  return [
+        if ($save) return [
 
             'policy_number' => $data['number'],
             'policy_series' => 'ser.',
@@ -31,6 +31,7 @@ class Policies extends Model
         ];
         else return false;
     }
+
     public function getCounter()
     {
         $file_counter = 'counter.dat';
@@ -50,6 +51,14 @@ class Policies extends Model
         $fp = fopen($file_counter, "w+");
         fwrite($fp, $counter);
         fclose($fp);
+//        dd($counter);
         return $counter;
+    }
+
+    public function updateStatusPay($policy_num)
+    {
+        $policy = $this->where('policy_number',$policy_num)->first();
+        $policy->status_payment = 1;
+        $policy->save();
     }
 }
