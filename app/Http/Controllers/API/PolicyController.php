@@ -64,10 +64,9 @@ class PolicyController extends Controller
             'issue_by' => $request->issue_by,
             'duration' => $request->duration,
             'email' => $request->email,
-            'user_id' => $request->user_id,
         ];
-        $user_id = $request->user_id;
-        $save_policy = $policies->savePolicy($data, $user_id);
+        $user_email = $request->email;
+        $save_policy = $policies->savePolicy($data, $user_email);
 
         if ($save_policy != false) return response()->json([
             'obtain_result' => ['code' => 'OK',],

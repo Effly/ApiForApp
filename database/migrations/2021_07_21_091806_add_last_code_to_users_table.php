@@ -14,7 +14,7 @@ class AddLastCodeToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('last_code')->after('password');
+            $table->string('last_code')->after('password')->nullable();
         });
     }
 

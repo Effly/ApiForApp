@@ -16,7 +16,7 @@ class CreatePoliciesTable extends Migration
         Schema::create('policies', function (Blueprint $table) {
             $table->id();
             $table->text('policy_data');
-            $table->integer('user_id');
+            $table->string('user_email');
             $table->timestamps();
         });
     }

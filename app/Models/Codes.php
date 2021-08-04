@@ -11,30 +11,36 @@ use Illuminate\Support\Facades\Log;
 class Codes extends Model
 {
     use HasFactory;
+
 //    protected $table= ['codes'];
 //    protected $fillable = ['code'];
 
-    public function getCode($email){
-        $code = new Codes();
-        $code->code = rand(10000,99999);
-        $code->email = $email;
-        $code->save();
-        $job = new deleteCode($email);
+    public function getCode($email)
+    {
+        if ($this->where('email', $email)->first() == null) {
+            $code = new Codes();
+            $code->code = rand(10000, 99999);
+            $code->email = $email;
+            $code->save();
+            $job = new deleteCode($email);
 //        $job = deleteCode::create($code->id);
-        deleteCode::dispatch($job)->delay(Carbon::now()->addMinutes(1));
-        Log::error('tratra3');
-        return $code;
+            deleteCode::dispatch($job)->delay(Carbon::now()->addMinutes(5));
+            Log::error('tratra3');
+            return $code;
+        } else {
+            return false;
+        }
     }
-    public function deleteCode($email){
+
+    public function deleteCode($email)
+    {
 //        dd($this->where('email',$email)->first());
         Log::info($email);
-        $code_id = $this->where('email',$email)->first()->id;
+        $code_id = $this->where('email', $email)->first()->id;
 
         $this->find($code_id)->delete();
     }
-    public function deleteUsedCode(){
 
-    }
 }
 /*метод гетпродукт для юзера
 прдварительный расчет с мин данными

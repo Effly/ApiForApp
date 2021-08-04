@@ -14,12 +14,12 @@ class Policies extends Model
         return $this->where('user_id', $user_id)->get();
     }
 
-    public function savePolicy($data,$user_id)
+    public function savePolicy($data,$user_email)
     {
         $data['number'] = $this->getCounter();
         $policy = new Policies();
         $policy->policy_data = serialize($data);
-        $policy->user_id = $user_id;
+        $policy->user_email = $user_email;
         $save = $policy->save();
         if ($save)  return [
 
@@ -39,14 +39,15 @@ class Policies extends Model
         if (file_exists($file_counter)) {
             $fp = fopen($file_counter, "r");
             $counter = fread($fp, filesize($file_counter));
+//            dd($counter);
             fclose($fp);
         } else {
-            $counter = 000000000001;
+            $counter = 00000000001;
         }
         // Увеличиваем счетчик на единицу
         $counter++;
         // Сохраняем обновленное значение счетчика
-        $fp = fopen($file_counter, "w");
+        $fp = fopen($file_counter, "w+");
         fwrite($fp, $counter);
         fclose($fp);
         return $counter;

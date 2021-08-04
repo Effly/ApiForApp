@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
+use App\Models\Codes;
 use App\Models\User;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Codes;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -15,7 +15,6 @@ class AuthController extends Controller
     public function register(Request $request, Codes $codes)
     {
         $rules = array(
-            'name' => 'string',
             'email' => 'email|required',
             'password' => 'required|min:8',
             'code' => 'required|min:5'
@@ -37,7 +36,6 @@ class AuthController extends Controller
 //        dd($validatedData);
         $request->password = Hash::make($request->password);
         $data = [
-            'name' => $request->name,
             'email' => $request->email,
             'password' => $request->password,
             'tel' => $request->tel,
@@ -53,11 +51,11 @@ class AuthController extends Controller
 
                 $codes->deleteCode($data['email']);
 
-                return response()->json(['user' => $user, 'access_token' => $accessToken]);
+                return response()->json(['result'=>['code'=>'OK','access_token' => $accessToken]]);
             } else {
                 return response()->json(['result' => ['code' => 'INVALID_CODE', 'errorId' => '1', 'errorDescr' => 'Несовпадение проверочного кода']]);
             }
-        }else {
+        } else {
             return response()->json(['result' => ['code' => 'INVALID_CODE', 'errorId' => '1', 'errorDescr' => 'Несовпадение проверочного кода']]);
         }
     }
@@ -101,8 +99,10 @@ class AuthController extends Controller
         if ($validator->fails()) {
             return response()->json(['result' => ['code' => 'INVALID_DATA', 'errorId' => '1', 'errorDescr' => $validator->errors()]]);
         }
-
-        return response(['code' => $codes->getCode($request->email)]);
+        $code = $codes->getCode($request->email);
+        if ($code != false){
+            return response()->json(['code' => $code]);
+        }else return response()->json(['code' => 'CODE_ALREADY_SEND', 'errorId'=>'3', 'errorDescr'=>'Код  уже отправлен на этот электронный адрес']);
     }
 
     public function getCodeForChangePass(User $user, Request $request, Codes $codes)
